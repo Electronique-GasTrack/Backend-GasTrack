@@ -17,6 +17,34 @@ public class BouteilleService {
     private final BouteilleRepository bouteilleRepository;
     private final GasPredictionService gasPredictionService;
 
+    private final com.example.GasTrack.repositories.UserRepository userRepository;
+    private final com.example.GasTrack.repositories.BluetoothRepository bluetoothRepository;
+
+    public Bouteille createBouteille(com.example.GasTrack.dto.BouteilleRequest request) {
+        Bouteille bouteille = new Bouteille();
+        bouteille.setPoids(request.getPoids());
+        bouteille.setFrequenceCuisine(request.getFrequenceCuisine());
+        bouteille.setNiveauInitial(request.getNiveauInitial() != null ? request.getNiveauInitial() : 100f);
+
+        // Link User
+        if (request.getUserId() != null) {
+            com.example.GasTrack.models.User user = userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + request.getUserId()));
+            bouteille.setUser(user);
+        } else {
+             throw new RuntimeException("User ID is required to create a Bouteille");
+        }
+
+        // Link Bluetooth (Optional)
+        if (request.getBluetoothId() != null) {
+            com.example.GasTrack.models.Bluetooth bluetooth = bluetoothRepository.findById(request.getBluetoothId())
+                    .orElseThrow(() -> new RuntimeException("Bluetooth not found with ID: " + request.getBluetoothId()));
+            bouteille.setBluetooth(bluetooth);
+        }
+
+        return bouteilleRepository.save(bouteille);
+    }
+
     public Bouteille createBouteille(Bouteille bouteille) {
         return bouteilleRepository.save(bouteille);
     }

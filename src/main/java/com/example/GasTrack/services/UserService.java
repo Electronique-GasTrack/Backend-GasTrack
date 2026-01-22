@@ -19,6 +19,13 @@ public class UserService {
     private final BluetoothService bluetoothService;
     private final BouteilleService bouteilleService;
 
+    public User createUser(com.example.GasTrack.dto.UserRequest request) {
+        User user = new User();
+        user.setUtilisation(request.getUtilisation());
+        user.setNombreOccupant(request.getNombreOccupant());
+        return userRepository.save(user);
+    }
+    
     public User createUser(User user) {
         return userRepository.save(user);
     }

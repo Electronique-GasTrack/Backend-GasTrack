@@ -18,8 +18,8 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        return new ResponseEntity<>(userService.createUser(user), HttpStatus.CREATED);
+    public ResponseEntity<User> createUser(@RequestBody com.example.GasTrack.dto.UserRequest request) {
+        return new ResponseEntity<>(userService.createUser(request), HttpStatus.CREATED);
     }
 
     @PostMapping("/onboarding")

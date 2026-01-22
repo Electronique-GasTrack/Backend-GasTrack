@@ -15,8 +15,22 @@ import java.util.Map;
 public class MesureService {
     private final MesureRepository mesureRepository;
 
-    public Mesure createMesure(Mesure mesure) {
-        mesure.setDateMesure(LocalDateTime.now());
+    private final com.example.GasTrack.repositories.BouteilleRepository bouteilleRepository;
+
+    public Mesure createMesure(com.example.GasTrack.dto.MesureRequest request) {
+        Mesure mesure = new Mesure();
+        mesure.setBatteriePourcentage(request.getBatteriePourcentage());
+        mesure.setGazPourcentage(request.getGazPourcentage());
+        mesure.setDateMesure(request.getDateMesure() != null ? request.getDateMesure() : LocalDateTime.now());
+
+        if (request.getBouteilleId() != null) {
+            com.example.GasTrack.models.Bouteille bouteille = bouteilleRepository.findById(request.getBouteilleId())
+                    .orElseThrow(() -> new RuntimeException("Bouteille not found with ID: " + request.getBouteilleId()));
+            mesure.setBouteille(bouteille);
+        } else {
+             throw new RuntimeException("Bouteille ID is required to create a Mesure");
+        }
+
         return mesureRepository.save(mesure);
     }
 

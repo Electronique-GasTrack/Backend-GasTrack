@@ -23,6 +23,7 @@ public class Mesure {
     private Integer gazPourcentage;
 
     @Column(name = "date_mesure", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime dateMesure;
 
     @CreationTimestamp

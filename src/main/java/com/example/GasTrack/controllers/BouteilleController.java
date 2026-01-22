@@ -19,8 +19,8 @@ public class BouteilleController {
     private final BouteilleService bouteilleService;
 
     @PostMapping
-    public ResponseEntity<Bouteille> createBouteille(@RequestBody Bouteille bouteille) {
-        return new ResponseEntity<>(bouteilleService.createBouteille(bouteille), HttpStatus.CREATED);
+    public ResponseEntity<Bouteille> createBouteille(@RequestBody com.example.GasTrack.dto.BouteilleRequest request) {
+        return new ResponseEntity<>(bouteilleService.createBouteille(request), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")

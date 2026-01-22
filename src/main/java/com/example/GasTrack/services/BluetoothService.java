@@ -10,6 +10,24 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BluetoothService {
     private final BluetoothRepository bluetoothRepository;
+    private final com.example.GasTrack.repositories.BouteilleRepository bouteilleRepository;
+
+    public Bluetooth createBluetooth(com.example.GasTrack.dto.BluetoothRequest request) {
+        Bluetooth bluetooth = new Bluetooth();
+        bluetooth.setNomBluetooth(request.getNomBluetooth());
+        bluetooth.setAddresseMac(request.getAddresseMac());
+        bluetooth.setConnexion(request.getConnexion() != null ? request.getConnexion() : false);
+        
+        Bluetooth saved = bluetoothRepository.save(bluetooth);
+        
+        if (request.getBouteilleId() != null) {
+            com.example.GasTrack.models.Bouteille bouteille = bouteilleRepository.findById(request.getBouteilleId())
+                    .orElseThrow(() -> new RuntimeException("Bouteille not found with ID: " + request.getBouteilleId()));
+            bouteille.setBluetooth(saved);
+            bouteilleRepository.save(bouteille);
+        }
+        return saved;
+    }
 
     public Bluetooth createBluetooth(Bluetooth bluetooth) {
         return bluetoothRepository.save(bluetooth);

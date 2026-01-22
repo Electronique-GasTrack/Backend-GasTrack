@@ -17,8 +17,8 @@ public class BluetoothController {
     private final BluetoothService bluetoothService;
 
     @PostMapping
-    public ResponseEntity<Bluetooth> createBluetooth(@RequestBody Bluetooth bluetooth) {
-        return new ResponseEntity<>(bluetoothService.createBluetooth(bluetooth), HttpStatus.CREATED);
+    public ResponseEntity<Bluetooth> createBluetooth(@RequestBody com.example.GasTrack.dto.BluetoothRequest request) {
+        return new ResponseEntity<>(bluetoothService.createBluetooth(request), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
