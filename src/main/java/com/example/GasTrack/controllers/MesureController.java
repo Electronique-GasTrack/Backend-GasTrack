@@ -3,6 +3,7 @@ package com.example.GasTrack.controllers;
 import com.example.GasTrack.models.Mesure;
 import com.example.GasTrack.services.MesureService;
 import lombok.RequiredArgsConstructor;
+import com.example.GasTrack.dto.MesureRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,7 @@ public class MesureController {
     private final MesureService mesureService;
 
     @PostMapping
-    public ResponseEntity<Mesure> createMesure(@RequestBody com.example.GasTrack.dto.MesureRequest request) {
+    public ResponseEntity<Mesure> createMesure(@RequestBody MesureRequest request) {
         return new ResponseEntity<>(mesureService.createMesure(request), org.springframework.http.HttpStatus.CREATED);
     }
 

@@ -1,6 +1,7 @@
 package com.example.GasTrack.services;
 
 import com.example.GasTrack.models.Mesure;
+import com.example.GasTrack.repositories.BouteilleRepository;
 import com.example.GasTrack.repositories.MesureRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,24 +16,41 @@ import java.util.stream.Collectors;
 public class GasPredictionService {
 
     private final MesureRepository mesureRepository;
+    private final BouteilleRepository bouteilleRepository;
 
     /**
-     * Prédit la date d'épuisement du gaz pour une bouteille donnée
+     * Prédit l'épuisement pour la première bouteille trouvée (cas par défaut sans paramètre)
      */
-    public PredictionResult predictForBouteille(Integer bouteilleId) {
+    public FullPredictionResponse predictDefault() {
+        return bouteilleRepository.findAll().stream()
+                .findFirst()
+                .map(b -> predictWithHistory(b.getIdBouteille()))
+                .orElseThrow(() -> new RuntimeException("Aucune bouteille trouvée dans le système"));
+    }
+
+    /**
+     * Retourne les mesures et la prédiction pour une bouteille
+     */
+    public FullPredictionResponse predictWithHistory(Integer bouteilleId) {
         List<Mesure> mesures = mesureRepository.findByBouteilleIdBouteilleOrderByDateMesureDesc(bouteilleId);
         
         if (mesures.isEmpty()) {
-            return new PredictionResult(null, 0.0, "Aucune mesure disponible");
+            return new FullPredictionResponse(new ArrayList<>(), 0.0, new PredictionResult(null, 0.0, "Aucune mesure disponible"));
         }
 
         double currentLevel = mesures.get(0).getGazPourcentage();
         
         List<GasMeasurement> history = mesures.stream()
+                .limit(20) // On limite aux 20 dernières mesures pour le front
                 .map(m -> new GasMeasurement(m.getDateMesure(), m.getGazPourcentage()))
                 .collect(Collectors.toList());
 
-        return predictGasDepletion(history, currentLevel);
+        PredictionResult prediction = predictGasDepletion(
+                mesures.stream().map(m -> new GasMeasurement(m.getDateMesure(), m.getGazPourcentage())).collect(Collectors.toList()), 
+                currentLevel
+        );
+
+        return new FullPredictionResponse(history, currentLevel, prediction);
     }
 
     /**
@@ -79,7 +97,7 @@ public class GasPredictionService {
         return new PredictionResult(
                 depletionDate,
                 confidence,
-                String.format("Consommation estimée: %.2f%%/heure", finalConsumptionRate)
+                String.format("Consommation estimée: %.2f%% /heure", finalConsumptionRate)
         );
     }
 
@@ -281,5 +299,21 @@ public class GasPredictionService {
             return depletionDate != null ?
                     ChronoUnit.HOURS.between(LocalDateTime.now(), depletionDate) : 0;
         }
+    }
+
+    public static class FullPredictionResponse {
+        private List<GasMeasurement> measurements;
+        private double currentLevel;
+        private PredictionResult prediction;
+
+        public FullPredictionResponse(List<GasMeasurement> measurements, double currentLevel, PredictionResult prediction) {
+            this.measurements = measurements;
+            this.currentLevel = currentLevel;
+            this.prediction = prediction;
+        }
+
+        public List<GasMeasurement> getMeasurements() { return measurements; }
+        public double getCurrentLevel() { return currentLevel; }
+        public PredictionResult getPrediction() { return prediction; }
     }
 }

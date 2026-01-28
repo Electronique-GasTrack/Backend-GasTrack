@@ -69,8 +69,8 @@ public class BouteilleService {
     public Integer estimerJoursRestants(Integer bouteilleId) {
         // Use the sophisticated service for estimation too if possible, or keep simple fallback
         // For consistency, let's try to align them, but estimerJoursRestants returns Integer
-        GasPredictionService.PredictionResult result = gasPredictionService.predictForBouteille(bouteilleId);
-        return (int) result.getDaysRemaining();
+        GasPredictionService.FullPredictionResponse fullResult = gasPredictionService.predictWithHistory(bouteilleId);
+        return (int) fullResult.getPrediction().getDaysRemaining();
     }
 
     public Map<String, Object> getDashboardData(Integer bouteilleId) {
@@ -93,7 +93,8 @@ public class BouteilleService {
 
     public Map<String, Object> getPredictions(Integer bouteilleId) {
         Bouteille bouteille = getBouteilleById(bouteilleId);
-        GasPredictionService.PredictionResult result = gasPredictionService.predictForBouteille(bouteilleId);
+        GasPredictionService.FullPredictionResponse fullResult = gasPredictionService.predictWithHistory(bouteilleId);
+        GasPredictionService.PredictionResult result = fullResult.getPrediction();
         
         Map<String, Object> predictions = new HashMap<>();
         predictions.put("joursRestants", result.getDaysRemaining());

@@ -16,47 +16,43 @@ public class GasPredictionController {
     @Autowired
     private GasPredictionService predictionService;
 
-    @PostMapping("/predict")
-    public ResponseEntity<PredictionResponse> predictDepletion(@RequestBody PredictionRequest request) {
+    @GetMapping("/predict")
+    public ResponseEntity<PredictionResponse> predictDefault() {
         try {
-            PredictionResult result = predictionService.predictGasDepletion(
-                    request.getMeasurements(),
-                    request.getCurrentLevel()
-            );
-
-            return ResponseEntity.ok(new PredictionResponse(
-                    result.getDepletionDate() != null ? result.getDepletionDate().toString() : null,
-                    result.getDaysRemaining(),
-                    result.getHoursRemaining(),
-                    result.getConfidence(),
-                    result.getDetails(),
-                    "success"
-            ));
+            GasPredictionService.FullPredictionResponse result = predictionService.predictDefault();
+            return ResponseEntity.ok(mapToResponse(result));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
-                    new PredictionResponse(null, 0, 0, 0.0, e.getMessage(), "error")
+                    new PredictionResponse(null, 0.0, null, 0, 0, 0.0, e.getMessage(), "error")
             );
         }
     }
 
+
     @GetMapping("/predict/{bouteilleId}")
     public ResponseEntity<PredictionResponse> predictForBouteille(@PathVariable Integer bouteilleId) {
         try {
-            PredictionResult result = predictionService.predictForBouteille(bouteilleId);
-
-            return ResponseEntity.ok(new PredictionResponse(
-                    result.getDepletionDate() != null ? result.getDepletionDate().toString() : null,
-                    result.getDaysRemaining(),
-                    result.getHoursRemaining(),
-                    result.getConfidence(),
-                    result.getDetails(),
-                    "success"
-            ));
+            GasPredictionService.FullPredictionResponse result = predictionService.predictWithHistory(bouteilleId);
+            return ResponseEntity.ok(mapToResponse(result));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
-                    new PredictionResponse(null, 0, 0, 0.0, e.getMessage(), "error")
+                    new PredictionResponse(null, 0.0, null, 0, 0, 0.0, e.getMessage(), "error")
             );
         }
+    }
+
+    private PredictionResponse mapToResponse(GasPredictionService.FullPredictionResponse result) {
+        PredictionResult pred = result.getPrediction();
+        return new PredictionResponse(
+                result.getMeasurements(),
+                result.getCurrentLevel(),
+                pred.getDepletionDate() != null ? pred.getDepletionDate().toString() : null,
+                pred.getDaysRemaining(),
+                pred.getHoursRemaining(),
+                pred.getConfidence(),
+                pred.getDetails(),
+                "success"
+        );
     }
 
     @GetMapping("/health")
@@ -64,18 +60,10 @@ public class GasPredictionController {
         return ResponseEntity.ok("Service de prédiction opérationnel");
     }
 
-    // DTOs
-    public static class PredictionRequest {
-        private List<GasMeasurement> measurements;
-        private double currentLevel;
-
-        public List<GasMeasurement> getMeasurements() { return measurements; }
-        public void setMeasurements(List<GasMeasurement> measurements) { this.measurements = measurements; }
-        public double getCurrentLevel() { return currentLevel; }
-        public void setCurrentLevel(double currentLevel) { this.currentLevel = currentLevel; }
-    }
 
     public static class PredictionResponse {
+        private List<GasMeasurement> measurements;
+        private double currentLevel;
         private String depletionDate;
         private long daysRemaining;
         private long hoursRemaining;
@@ -83,8 +71,11 @@ public class GasPredictionController {
         private String details;
         private String status;
 
-        public PredictionResponse(String depletionDate, long daysRemaining, long hoursRemaining,
-                                  double confidence, String details, String status) {
+        public PredictionResponse(List<GasMeasurement> measurements, double currentLevel, String depletionDate, 
+                                  long daysRemaining, long hoursRemaining, double confidence, 
+                                  String details, String status) {
+            this.measurements = measurements;
+            this.currentLevel = currentLevel;
             this.depletionDate = depletionDate;
             this.daysRemaining = daysRemaining;
             this.hoursRemaining = hoursRemaining;
@@ -93,6 +84,8 @@ public class GasPredictionController {
             this.status = status;
         }
 
+        public List<GasMeasurement> getMeasurements() { return measurements; }
+        public double getCurrentLevel() { return currentLevel; }
         public String getDepletionDate() { return depletionDate; }
         public long getDaysRemaining() { return daysRemaining; }
         public long getHoursRemaining() { return hoursRemaining; }

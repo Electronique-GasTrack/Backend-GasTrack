@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public class MesureRequest {
     private Integer batteriePourcentage;
     private Integer gazPourcentage;
-    private LocalDateTime dateMesure; // Optional, defaults to now if null
+    @com.fasterxml.jackson.annotation.JsonFormat(shape = com.fasterxml.jackson.annotation.JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
+    private LocalDateTime dateMesure; // Doit être au format : dd-MM-yyyy HH:mm:ss (ex: 29-01-2026 14:00:00)
     private Integer bouteilleId;
 }
